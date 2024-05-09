@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bubble Chart: Education Level vs Income</title>
+    <!-- Load D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <!-- SVG container for bubble chart -->
+    <svg id="bubbleChart" width="800" height="600"></svg>
+
+    <!-- JavaScript code for bubble chart -->
+    <script>
+        // Load data from JSON file
+        d3.json("persons.json").then(function(data) {
+            // Set up SVG dimensions and margins
+            var margin = { top: 20, right: 20, bottom: 30, left: 40 };
+            var width = 800 - margin.left - margin.right;
+            var height = 600 - margin.top - margin.bottom;
+
+            // Append SVG element to the designated div
+            var svg = d3.select("#bubbleChart")
+                        .attr("width", width + margin.left + margin.right)
+                        .attr("height", height + margin.top + margin.bottom)
+                        .append("g")
+                        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            // Define scales for x and y axes
+            var x = d3.scaleLinear()
+                      .domain([0, d3.max(data, d => d.Income)])
+                      .range([0, width]);
+
+            var y = d3.scaleLinear()
+                      .domain([0, d3.max(data, d => d.Age)])  // Fixed to represent age
+                      .range([height, 0]);
+
+            // Define scale for bubble size
+            var r = d3.scaleLinear()
+                      .domain([0, d3.max(data, d => d.Income)])
+                      .range([5, 30]); // Set the range of bubble sizes
+
+            // Define color scale for education levels
+            var color = d3.scaleOrdinal(d3.schemeCategory10)
+                          .domain(data.map(d => d.EducationLevel));
+
+            // Draw bubbles for each data point
+            svg.selectAll("circle")
+               .data(data)
+               .enter().append("circle")
+               .attr("cx", d => x(d.Income))
+               .attr("cy", d => y(d.Age))  // Corrected to represent age
+               .attr("r", d => r(d.Income))
+               .attr("fill", d => color(d.EducationLevel))
+               .attr("opacity", 0.7); // Set the opacity of bubbles
+
+            // Add x-axis
+            svg.append("g")
+               .attr("transform", "translate(0," + height + ")")
+               .call(d3.axisBottom(x));
+
+            // Add y-axis
+            svg.append("g")
+               .call(d3.axisLeft(y));
+
+            // Add legend
+            var legend = svg.selectAll(".legend")
+                            .data(color.domain())
+                            .enter().append("g")
+                            .attr("class", "legend")
+                            .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+            // Add legend colored rectangles
+            legend.append("rect")
+                  .attr("x", width - 18)
+                  .attr("width", 18)
+                  .attr("height", 18)
+                  .style("fill", color);
+
+            // Add legend text
+            legend.append("text")
+                  .attr("x", width - 24)
+                  .attr("y", 9)
+                  .attr("dy", ".35em")
+                  .style("text-anchor", "end")
+                  .text(function(d) { return d; });
+        });
+    </script>
+</body>
+</html>

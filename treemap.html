@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tidy Tree</title>
+    <!-- Load D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        .node circle {
+            fill: steelblue;
+            stroke: #fff;
+            stroke-width: 2px;
+        }
+
+        .node text {
+            font: 12px sans-serif;
+        }
+
+        .link {
+            fill: none;
+            stroke: #ccc;
+            stroke-width: 2px;
+        }
+    </style>
+</head>
+<body>
+    <!-- SVG container for tree -->
+    <svg id="treeContainer" width="1000" height="800"></svg>
+
+    <!-- JavaScript code for tree -->
+    <script>
+        // Load data from JSON file
+        d3.json("employe_hierarch.json").then(function(data) {
+            // Set up tree layout
+            var treeLayout = d3.tree()
+                               .size([800, 600]);
+
+            // Create hierarchical data structure
+            var root = d3.stratify()
+                         .id(function(d) { return d.employeeID; })
+                         .parentId(function(d) { return d.managerID; })
+                         (data);
+
+            // Assigns the x and y position for the nodes
+            var treeData = treeLayout(root);
+
+            // Append SVG element to the designated div
+            var svg = d3.select("#treeContainer");
+
+            // Add links between nodes
+            var link = svg.selectAll(".link")
+                          .data(treeData.links())
+                          .enter().append("path")
+                          .attr("class", "link")
+                          .attr("d", d3.linkHorizontal()
+                                      .x(function(d) { return d.y; })
+                                      .y(function(d) { return d.x; }));
+
+            // Add nodes
+            var node = svg.selectAll(".node")
+                          .data(treeData.descendants())
+                          .enter().append("g")
+                          .attr("class", "node")
+                          .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
+
+            // Add circle for each node
+            node.append("circle")
+                .attr("r", 10);
+
+            // Add text for each node (employee names)
+            node.append("text")
+                .attr("dy", ".35em")
+                .attr("x", function(d) { return d.children ? -13 : 13; })
+                .style("text-anchor", function(d) { return d.children ? "end" : "start"; })
+                .text(function(d) { return d.data.firstName; });
+        });
+    </script>
+</body>
+</html>

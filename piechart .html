@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Pie Charts</title>
+    <!-- Include D3.js library -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <!-- SVG container for gender pie chart -->
+    <svg id="gender-pie-chart" width="400" height="400"></svg>
+    <!-- SVG container for department pie chart -->
+    <svg id="department-pie-chart" width="400" height="400"></svg>
+
+    <script>
+        // Define constants for chart dimensions
+        const width = 400;
+        const height = 400;
+        const radius = Math.min(width, height) / 2;
+        const innerRadius = radius / 2; // Set inner radius for the donut
+
+        // Gender pie chart
+        const genderSvg = d3.select("#gender-pie-chart")
+            .append("g")
+            .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+        // Color scale for gender pie chart
+        const genderColor = d3.scaleOrdinal(d3.schemeCategory10);
+
+        // Define arc for gender pie chart
+        const genderArc = d3.arc()
+            .innerRadius(0)
+            .outerRadius(radius);
+
+        // Define arc for gender pie chart labels
+        const genderLabelArc = d3.arc()
+            .outerRadius(radius - 40)
+            .innerRadius(radius - 40);
+
+        // Define pie layout for gender data
+        const genderPie = d3.pie()
+            .value(d => d.value);
+
+        // Department pie chart
+        const departmentSvg = d3.select("#department-pie-chart")
+            .append("g")
+            .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+        // Color scale for department pie chart
+        const departmentColor = d3.scaleOrdinal(d3.schemeCategory10);
+
+        // Define arc for department pie chart
+        const departmentArc = d3.arc()
+            .innerRadius(innerRadius) // Set inner radius for the donut
+            .outerRadius(radius);
+
+        // Define arc for department pie chart labels
+        const departmentLabelArc = d3.arc()
+            .outerRadius(radius - 40)
+            .innerRadius(innerRadius + 20); // Adjust inner radius for label positioning
+
+        // Define pie layout for department data
+        const departmentPie = d3.pie()
+            .value(d => d.value);
+
+        // Load data from a JSON file (replace with your actual data file)
+        d3.json("employe_hierarch.json").then(function(data) {
+            // Aggregate data by gender
+            const genderData = d3.rollup(data, v => v.length, d => d.gender);
+            // Aggregate data by department
+            const departmentData = d3.rollup(data, v => v.length, d => d.department);
+
+            // Gender pie chart
+            const genderArcs = genderSvg.selectAll(".arc-gender")
+                .data(genderPie(Array.from(genderData, ([key, value]) => ({ key, value }))))
+                .enter()
+                .append("g")
+                .attr("class", "arc-gender");
+
+            // Append paths for gender arcs
+            genderArcs.append("path")
+                .attr("d", genderArc)
+                .attr("fill", d => genderColor(d.data.key));
+
+            // Append labels for gender arcs
+            genderArcs.append("text")
+                .attr("transform", d => "translate(" + genderLabelArc.centroid(d) + ")")
+                .text(d => d.data.key + ": " + d.data.value)
+                .attr("text-anchor", "middle");
+
+            // Department pie chart (donut)
+            const departmentArcs = departmentSvg.selectAll(".arc-department")
+                .data(departmentPie(Array.from(departmentData, ([key, value]) => ({ key, value }))))
+                .enter()
+                .append("g")
+                .attr("class", "arc-department");
+
+            // Append paths for department arcs
+            departmentArcs.append("path")
+                .attr("d", departmentArc)
+                .attr("fill", d => departmentColor(d.data.key));
+
+            // Append labels for department arcs
+            departmentArcs.append("text")
+                .attr("transform", d => "translate(" + departmentLabelArc.centroid(d) + ")")
+                .attr("text-anchor","middle")
+                .attr("font-size","0.7em")
+                .text(function (d) {return d.data.key;});
+        });
+    </script>
+</body>
+</html>

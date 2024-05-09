@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gender Bar Chart</title>
+    <!-- Include D3.js library -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <!-- SVG container for gender bar chart -->
+    <svg id="gender-bar-chart" width="400" height="400"></svg>
+
+    <script>
+        // Define constants for chart dimensions
+        const width = 400;
+        const height = 400;
+
+        // Create SVG container for gender bar chart
+        const genderSvg = d3.select("#gender-bar-chart")
+            .attr("width", width)
+            .attr("height", height)
+            .append("g")
+            .attr("transform", "translate(50, 50)"); // Add padding for axis labels
+
+        // Load data from a JSON file (replace with your actual data file)
+        d3.json("employe_hierarch.json").then(function(data) {
+            // Aggregate data by gender
+            const genderData = d3.rollup(data, v => v.length, d => d.gender);
+
+            // Convert data to array of objects
+            const genderArray = Array.from(genderData, ([key, value]) => ({ gender: key, count: value }));
+
+            // Define color scale
+            const colorScale = d3.scaleOrdinal()
+                .domain(genderArray.map(d => d.gender))
+                .range(d3.schemeCategory10);
+
+            // Define scales
+            const xScale = d3.scaleBand()
+                .domain(genderArray.map(d => d.gender))
+                .range([0, width - 100]) // Adjust range to fit within SVG container
+                .padding(0.1);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, d3.max(genderArray, d => d.count)])
+                .nice()
+                .range([height - 100, 0]); // Adjust range to fit within SVG container
+
+            // Create bars
+            genderSvg.selectAll(".bar")
+                .data(genderArray)
+                .enter().append("rect")
+                .attr("class", "bar")
+                .attr("x", d => xScale(d.gender))
+                .attr("y", d => yScale(d.count))
+                .attr("width", xScale.bandwidth())
+                .attr("height", d => height - 100 - yScale(d.count)) // Adjust height calculation
+                .attr("fill", d => colorScale(d.gender));
+
+            // Create x-axis
+            genderSvg.append("g")
+                .attr("transform", "translate(0," + (height - 100) + ")") // Adjust translation
+                .call(d3.axisBottom(xScale));
+
+            // Create y-axis
+            genderSvg.append("g")
+                .call(d3.axisLeft(yScale));
+
+            // Add axis labels
+            genderSvg.append("text")
+                .attr("x", width / 2)
+                .attr("y", height - 50) // Adjust y position
+                .attr("text-anchor", "middle")
+                .text("Gender");
+
+            genderSvg.append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("x", -height / 2)
+                .attr("y", -30) // Adjust y position
+                .attr("text-anchor", "middle")
+                .text("Count");
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Visualization</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <!-- D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        #map { height: 500px; }
+    </style>
+</head>
+<body>
+    <!-- Map container -->
+    <div id="map"></div>
+
+    <!-- JavaScript code -->
+    <script>
+        // Initialize Leaflet map
+        var map = L.map('map').setView([37.7749, -122.4194], 10); // Center map on default coordinates
+
+        // Add tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Load data from JSON file
+        d3.json("persons.json").then(function(data) {
+            // Plot each individual on the map
+            data.forEach(function(person) {
+                var marker = L.marker([person.Latitude, person.Longitude]).addTo(map);
+                marker.bindPopup("<b>" + person.Name + "</b><br>" + person.Address + ", " + person.City + ", " + person.State + "<br>" + person.Country);
+            });
+        });
+    </script>
+</body>
+</html>
